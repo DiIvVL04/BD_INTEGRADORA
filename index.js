@@ -62,7 +62,7 @@ app.get('/download/:id', async (req, res) => {
     }
 });
 
-app.get('/documentos', async (req, res) => {
+app.get('/documentos', async (req, res) => { //hace un findAll a la BD, retorna todo los documentos en JSON 
     try {
         const documentos = await collection.find({}).toArray();
         res.json({ documentos });
@@ -72,11 +72,11 @@ app.get('/documentos', async (req, res) => {
     }
 });
 
-app.delete('/delete/:id', async (req,res) => {
+app.delete('/delete/:id', async (req,res) => { //hace un delete
     try {
-        const id = req.params.id;
+        const id = req.params.id; //jala la ID que escogio el cliente
 
-        const result = await collection.deleteOne({ _id: new ObjectId(id) });
+        const result = await collection.deleteOne({ _id: new ObjectId(id) }); //hace el query de deleteOne({_id: id})
 
         if (result.deletedCount === 1) {
             res.status(200).json({ message: "Archivo eliminado correctamente" });
