@@ -4,22 +4,11 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIGA | Sistema Integral de Gestión de Archivos</title>
-  <link rel="icon" href="/assets/SIGA_logo.jpg" style="border-radius: 100%;">
+  <title>BDCN Integradora</title>
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-    }
     .container {
-      margin-top: 3%;
       display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .input {
-      margin-bottom: 20px;
+      height: 100vh;
     }
     .topnav {
       height: 30px;
@@ -31,6 +20,9 @@
       line-height: 50px;
       font-weight: bold;
       font-size: 20;
+    }
+    #main {
+      display: flex;
     }
     .upload-button {
       padding: 10px 20px;
@@ -65,6 +57,11 @@
       width: 200px; 
       margin: 10px; 
     }
+    #document-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
     .menu-options {
     position: fixed;
     display: none;
@@ -73,6 +70,7 @@
     z-index: 1;
     border: 1px solid #ccc;
     }
+
     .menu-options button {
       width: 100%;
       padding: 10px;
@@ -81,153 +79,157 @@
       background-color: inherit;
       cursor: pointer;
     }
+
     .menu-options button:hover {
       background-color: #ddd;
     }
   </style>
 </head>
-<body style="background-color: #94c6e1; margin: 0;">
-  <div style="background-color:  #013d6f; padding: 10px;">
-    <div style="display: flex; align-items: center; justify-content: center;">
-      <img src="/assets/SIGA_logo.jpg" style="height: 10%; width: 10%; margin-right: 10px; border-radius: 250%;">
-      <h1 style="margin: 0; color: white;">SIGA | Sistema Integral de Gestión de Archivos</h1>
-    </div>
-  </div>
-
+<body>
   <div class="container">
     <div class="main">
-      <div class="input">
-        <input id="search-input" placeholder="Buscar..." class="topnav"/>
-      </div>
       <form method="POST" action="/upload" enctype="multipart/form-data" id="upload-form">
-        <button type="button" onclick="document.getElementById('file-input').click()" class="upload-button" style="background-color: #013d6f; font-size: larger;">
+        <button type="button" onclick="document.getElementById('file-input').click()" class="upload-button">
           Subir archivo
         </button>
         <input type="file" id="file-input" name="archivo" onchange="handleFileSelect(event)" />
         <input type="submit" style="display: none;" />
       </form>
-      
+      <div>
+        <input id="search-input" placeholder="Buscar" class="topnav"/>
+      </div>
   
       <div id="documentos-container">
         <div class="document-list" id="document-list">
-          <!--Archivos-->
+          <!--Documentos (dinamicos)-->
         </div>
       </div>
     </div>
   </div>
   
-  <!-- Opciones de menú -->
+  <!-- Menú de cards -->
   <div id="menuOptions" class="menu-options">
-    <button onclick="openUrl()">URL</button>
+    <button onclick="openUrl()">Copiar URL</button>
     <button onclick="downloadFile()">Descargar</button>
     <button onclick="deleteFile()">Eliminar</button>
   </div>
   
   <script>
-    async function fetchData(url, options) {
-        try {
-            const response = await fetch(url, options);
-            if (!response.ok) {
-                throw new Error(`Error: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error de red:', error);
-        }
-    }
-
+    
     function handleFileSelect(event) {
         const form = document.getElementById('upload-form');
         form.submit();
     }
 
+    //carga de documentos
     async function loadDocumentos() {
-        const data = await fetchData('/documentos');
-        const documentList = document.getElementById('document-list');
-        const searchInput = document.getElementById('search-input');
+    try {
+        const response = await fetch('/documentos'); //fetch del findAll
+        const data = await response.json();  //convierte a json el fetch de arriba
+        const documentList = document.getElementById('document-list'); //toda la lista de docs
+        const buscadorInput = document.getElementById('search-input'); //buscador
 
         documentList.innerHTML = '';
 
         const updateDocumentList = () => {
-            const searchTerm = searchInput.value.trim().toLowerCase();
-            if (!searchTerm) {
+            const buscador = buscadorInput.value.trim().toLowerCase(); //buscador del input, quita espacios y hace minusculas lo que busques
+            if (!buscador) {
                 documentList.innerHTML = '';
-                data.documentos.forEach(documento => {
-                    const documentCard = createDocumentCard(documento);
+                data.documentos.forEach(documento => { //si no hay nada pone todos
+                    const documentCard = crearCard(documento);
                     documentList.appendChild(documentCard);
                 });
-            } else {
-                const filteredDocumentos = data.documentos.filter(documento =>
-                    documento.name.toLowerCase().replace(/\.[^/.]+$/, '').includes(searchTerm)
-                );
+              } else { //si el input tiene algo hace filtrado
+                  const filtradoDocs = data.documentos.filter(documento =>
+                      documento.name.toLowerCase().replace(/\.[^/.]+$/, '').includes(buscador)
+                  );
 
-                documentList.innerHTML = '';
+                  documentList.innerHTML = '';
 
-                filteredDocumentos.forEach(documento => {
-                    const documentCard = createDocumentCard(documento);
-                    documentList.appendChild(documentCard);
-                });
-            }
-        };
-
-        searchInput.addEventListener('input', updateDocumentList);
-
-        updateDocumentList();
+                  filtradoDocs.forEach(documento => { //filtrado, por cada documento hace un card
+                      const documentCard = crearCard(documento);
+                      documentList.appendChild(documentCard);
+                  });
+              }
+          };
+          buscadorInput.addEventListener('input', updateDocumentList);
+          updateDocumentList();
+      } catch (error) {
+          console.error('Error al cargar los documentos:', error);
+      }
     }
 
-    function createDocumentCard(documento) {
-        const documentCard = document.createElement('div');
-        documentCard.classList.add('document-card');
+    function crearCard(documento) {
+        const documentCard = document.createElement('div'); //crea un elemento div
+        documentCard.classList.add('document-card'); //le pone al div la clase document-card
 
-        const image = document.createElement('img');
-        image.src = documento.contentType.startsWith('image') ? `/download/${documento._id}` : '../assets/generico.png';
-        image.alt = documento.name;
-        image.classList.add('document-image');
-        documentCard.appendChild(image);
+        if (documento.contentType.startsWith('image')) { //si el documento tiene imagen, la src de la imagen va a ser el resultado del /download/id 
+            const image = document.createElement('img');
+            image.src = `/download/${documento._id}`;
+            image.alt = documento.name;
+            image.classList.add('document-image');
+            documentCard.appendChild(image);
+        } else { //si no tiene imagen, la src de la imagen va a ser el generico.png de la carpeta assets
+            const image = document.createElement('img');
+            image.src = '../assets/generico.png';
+            image.alt = documento.name;
+            image.classList.add('document-image');
+            documentCard.appendChild(image);
+        }
 
         const documentName = document.createElement('div');
-        documentName.textContent = documento.name;
-        documentCard.appendChild(documentName);
+        documentName.textContent = documento.name; //le pone el nombre del archivo
+        documentCard.appendChild(documentName); //al final ya crea el card
 
-        documentCard.addEventListener('click', function(event) {
+        documentCard.addEventListener('click', function(event) { //este es un evento de click, el menu que aparece al dar click a algo, que dice "Copiar URL, Descargar, Eliminar"
             const menuOptions = document.getElementById('menuOptions');
             menuOptions.style.display = 'block';
             menuOptions.style.left = `${event.pageX}px`;
             menuOptions.style.top = `${event.pageY}px`;
-
             menuOptions.dataset.documentId = documento._id;
-            event.stopPropagation();
+            event.stopPropagation(); //pa que no se cicle
         });
 
-        return documentCard;
+        return documentCard; //regresa la card creada con el nombre, la src de la imagen y el evento de click del menu
     }
 
-    function openUrl() {
-        const documentId = document.getElementById('menuOptions').dataset.documentId;
-        window.location.href = `/imagen/${documentId}`;
+    function openUrl() { 
+      //funcion en stand by, copia la url y el id de la imagen y si pegas la URL te descarla la imagen
+      const documentId = document.getElementById('menuOptions').dataset.documentId;
+      const downloadUrl = `http://${window.location.hostname}:3001/download/${documentId}`; //jala el localhost, deberia de jalar la IP del cliente (nomrlamente comienza con 192.168)
+      const tempInput = document.createElement('input');
+      tempInput.value = downloadUrl; //el input es la url de arriba
+      
+      document.body.appendChild(tempInput);
+      
+      tempInput.select(); //selecciona y copia la url al portapapeles
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+
+      alert('¡Enlace copiado al portapapeles!');
     }
 
-    function downloadFile() {
+    function downloadFile() { //redirige a la funcion de download del index.js
         const documentId = document.getElementById('menuOptions').dataset.documentId;
         window.location.href = `/download/${documentId}`;
     }
 
     async function deleteFile() {
-    try {
-        const documentId = document.getElementById('menuOptions').dataset.documentId;
-        const response = await fetch(`/delete/${documentId}`, {
-            method: 'DELETE'
-        });
-        const data = await response.json();
-        if (data && data.message === "Archivo eliminado correctamente") {
-            loadDocumentos();
-        }
-    } catch (error) {
-        console.error('Error al eliminar el archivo:', error);
-    }
-}
+      try { //como aca no puede hacer redireccion, tienes que mandar el id al servidor para que este lo reciba y devuelva la respuesta/promesa
+          const documentId = document.getElementById('menuOptions').dataset.documentId;
+          const response = await fetch(`/delete/${documentId}`, {
+              method: 'DELETE'
+          });
+          const data = await response.json();
+          if (data && data.message === "Archivo eliminado correctamente") {
+              loadDocumentos();
+          }
+      } catch (error) {
+          console.error('Error al eliminar el archivo:', error);
+          }
+      }
 
-
+    //carga todo el dom y este se actualiza constantemente
     document.addEventListener('DOMContentLoaded', loadDocumentos);
 
     document.addEventListener('click', function() {
@@ -236,7 +238,7 @@
             menuOptions.style.display = 'none';
         }
     });
+    
 </script>
-
 </body>
 </html>
