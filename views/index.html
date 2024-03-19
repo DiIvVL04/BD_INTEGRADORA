@@ -56,7 +56,8 @@
       margin-bottom: 10px;
       padding: 10px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: center; /* Centro verticalmente */
       justify-content: space-between; /* Para separar la imagen y el botón */
       width: 200px; 
       margin: 10px; 
@@ -64,10 +65,8 @@
       overflow: auto;
     }
     .document-image {
-      max-width: 100px;
-      max-height: 100px;
-      margin-right: 10px;
-      transition: transform 0.2s ease; /* Agrega la misma transición aquí para que la transición sea suave al retirar el cursor */
+      max-width: 100%;
+      margin-top: 10px; /* Espacio arriba */
     }
     #documentos-container {
       display: flex;
@@ -135,6 +134,13 @@
       font-size: 16px;
       padding: 10px;
     }
+
+    .preview-image {
+      margin-top: 5%;/* Ajusta el valor según sea necesario */
+    width: 30%; /* Ajusta el ancho deseado */
+    height: auto; 
+}
+
   </style>
 </head>
 <body style="background-color: #94c6e1; margin: 0;">
@@ -311,12 +317,13 @@
     }
     
     function previewImage(src) {
-      const modal = document.getElementById('modal');
-      const modalImage = document.getElementById('modal-image');
-      modal.style.display = 'block';
-      modalImage.src = src;
-    }
-    
+    const modal = document.getElementById('modal');
+    const modalImage = document.getElementById('modal-image');
+    modal.style.display = 'block';
+    modalImage.src = src;
+    modalImage.classList.add('preview-image'); // Agregar clase para estilos
+}
+
     const previewButton = document.getElementById('previewButton');
     previewButton.addEventListener('click', function() {
       const documentId = document.getElementById('menuOptions').dataset.documentId;
@@ -326,3 +333,4 @@
 </script>
 </body>
 </html>
+
