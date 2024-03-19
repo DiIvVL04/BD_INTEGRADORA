@@ -4,14 +4,25 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BDCN Integradora</title>
+  <title>SIGA | Sistema Integral de Gestión de Archivos</title>
+  <link rel="icon" href="/assets/SIGA_logo.jpg" style="border-radius: 100%;">
   <style>
-    .container {
-      display: flex;
+    body, html {
+      margin: 0;
+      padding: 0;
       height: 100vh;
     }
+    .container {
+      margin-top: 3%;
+    }
+    .input {
+      margin-bottom: 5%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
     .topnav {
-      height: 30px;
+      height: 50px;
       width: 400px;
       background-color: #ccc;
       color: black;
@@ -19,75 +30,125 @@
       padding-left: 10px;
       line-height: 50px;
       font-weight: bold;
-      font-size: 20;
+      font-size: 30px;
     }
-    #main {
+    .main {
       display: flex;
+      justify-content: center;
+      align-items: center;
     }
     .upload-button {
       padding: 10px 20px;
-      background-color: #4CAF50;
+      background-color: #013d6f;
+      font-size: 30px;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 20px;
       cursor: pointer;
+      margin-top: 10%;
     }
     input[type="file"] {
       display: none;
     }
     .document-card {
-      border: 1px solid #ccc;
+      border: 2px solid #ccc;
       border-radius: 5px;
       margin-bottom: 10px;
       padding: 10px;
       display: flex;
       align-items: center;
+      justify-content: space-between; /* Para separar la imagen y el botón */
+      width: 200px; 
+      margin: 10px; 
+      word-break: break-all;
+      overflow: auto;
     }
     .document-image {
       max-width: 100px;
       max-height: 100px;
       margin-right: 10px;
+      transition: transform 0.2s ease; /* Agrega la misma transición aquí para que la transición sea suave al retirar el cursor */
     }
     #documentos-container {
       display: flex;
       flex-wrap: wrap;
-      justify-content: flex-start;
-    }
-    .document-card {
-      width: 200px; 
-      margin: 10px; 
+      justify-content: center;
     }
     #document-list {
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-start;
+      color: white;
+      font-size: x-large;
+      font-weight: medium;
+      background-color: #013d6f;
     }
     .menu-options {
-    position: fixed;
-    display: none;
-    background-color: #f9f9f9;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
-    border: 1px solid #ccc;
+      position: fixed;
+      display: none;
+      background-color: #f9f9f9;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      z-index: 1;
+      border: 1px solid #ccc;
     }
-
     .menu-options button {
       width: 100%;
       padding: 10px;
       text-align: left;
       border: none;
-      background-color: inherit;
+      background-color: #3d84bb;
       cursor: pointer;
+      color: white;
+      font-size: 20px;
+      text-align: center;
     }
-
     .menu-options button:hover {
-      background-color: #ddd;
+      background-color: #3d84bb97;
+    }
+    /* Estilos para el modal */
+    .modal {
+      display: none; /* Por defecto oculto */
+      position: fixed; /* Posicionamiento fijo para mantenerlo sobre el contenido */
+      z-index: 1; /* Situarlo por encima del contenido */
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto; /* Permitir desplazamiento si la imagen es demasiado grande */
+      background-color: rgba(0,0,0,0.9); /* Fondo oscuro semi-transparente */
+    }
+    .modal-content {
+      margin: auto; /* Centrar la imagen */
+      display: block;
+      max-width: 80%; /* Limitar el tamaño máximo */
+      max-height: 80%;
+    }
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 10px;
     }
   </style>
 </head>
-<body>
+<body style="background-color: #94c6e1; margin: 0;">
+  <div style="background-color:  #013d6f; padding: 10px;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+      <img src="/assets/SIGA_logo.jpg" style="height: 10%; width: 10%; margin-right: 10px; border-radius: 250%;">
+      <h1 style="margin: 0; color: white;">SIGA | Sistema Integral de Gestión de Archivos</h1>
+    </div>
+  </div>
+
   <div class="container">
     <div class="main">
+      <div class="input">
+        <input id="search-input" placeholder="Buscar..." class="topnav"/>
       <form method="POST" action="/upload" enctype="multipart/form-data" id="upload-form">
         <button type="button" onclick="document.getElementById('file-input').click()" class="upload-button">
           Subir archivo
@@ -95,25 +156,30 @@
         <input type="file" id="file-input" name="archivo" onchange="handleFileSelect(event)" />
         <input type="submit" style="display: none;" />
       </form>
-      <div>
-        <input id="search-input" placeholder="Buscar" class="topnav"/>
-      </div>
+    </div>
+    </div>
   
       <div id="documentos-container">
         <div class="document-list" id="document-list">
-          <!--Documentos (dinamicos)-->
+          <!--Archivos-->
         </div>
       </div>
-    </div>
+    
   </div>
   
-  <!-- Menú de cards -->
+  <!-- Modal para mostrar la imagen -->
+  <div id="modal" class="modal">
+    <span class="close-button" onclick="closeModal()">X</span>
+    <img id="modal-image" class="modal-content" />
+  </div>
+
+  <!-- Opciones de menú -->
   <div id="menuOptions" class="menu-options">
-    <button onclick="openUrl()">Copiar URL</button>
+    <button onclick="openUrl()">URL</button>
     <button onclick="downloadFile()">Descargar</button>
     <button onclick="deleteFile()">Eliminar</button>
+    <button id="previewButton">Vista Previa</button>
   </div>
-  
   <script>
     
     function handleFileSelect(event) {
@@ -238,7 +304,25 @@
             menuOptions.style.display = 'none';
         }
     });
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      modal.style.display = 'none';
+    }
     
+    function previewImage(src) {
+      const modal = document.getElementById('modal');
+      const modalImage = document.getElementById('modal-image');
+      modal.style.display = 'block';
+      modalImage.src = src;
+    }
+    
+    const previewButton = document.getElementById('previewButton');
+    previewButton.addEventListener('click', function() {
+      const documentId = document.getElementById('menuOptions').dataset.documentId;
+      const imageUrl = `/download/${documentId}`;
+      previewImage(imageUrl);
+    });
 </script>
 </body>
 </html>

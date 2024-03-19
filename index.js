@@ -72,7 +72,7 @@ app.get('/documentos', async (req, res) => { //hace un findAll a la BD, retorna 
     }
 });
 
-app.delete('/delete/:id', async (req,res) => { //hace un delete
+app.delete('/delete/:id', async (req,res) => { //hace un delete     
     try {
         const id = req.params.id; //jala la ID que escogio el cliente
 
