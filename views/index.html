@@ -51,18 +51,19 @@
       display: none;
     }
     .document-card {
-      border: 2px solid #ccc;
-      border-radius: 5px;
-      margin-bottom: 10px;
-      padding: 10px;
       display: flex;
       flex-direction: column;
       align-items: center; /* Centro verticalmente */
-      justify-content: space-between; /* Para separar la imagen y el botón */
+      justify-content: center;
+      text-align: center;
       width: 200px; 
       margin: 10px; 
       word-break: break-all;
       overflow: auto;
+      border: 4px solid #013d6f;;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      padding: 10px;
     }
     .document-image {
       max-width: 100%;
@@ -72,15 +73,19 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
+      max-width: fit-content;
+      margin: 0 auto;
     }
     #document-list {
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-start;
-      color: white;
-      font-size: x-large;
-      font-weight: medium;
-      background-color: #013d6f;
+      color: #013d6f;
+      font-size: xx-large;
+      font-weight: bolder;
+      /* background-color: #013d6f; */
+      max-width: 100%;
+      margin-bottom: 10%;
     }
     .menu-options {
       position: fixed;
@@ -125,13 +130,13 @@
     .close-button {
       position: absolute;
       top: 10px;
-      right: 10px;
+      left: 50%;
+      transform: translateX(-50%);
       background-color: #f44336;
       color: white;
       border: none;
-      border-radius: 50%;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 40px;
       padding: 10px;
     }
 
@@ -175,7 +180,7 @@
   
   <!-- Modal para mostrar la imagen -->
   <div id="modal" class="modal">
-    <span class="close-button" onclick="closeModal()">X</span>
+    <span class="close-button" onclick="closeModal()">Cerrar</span>
     <img id="modal-image" class="modal-content" />
   </div>
 
@@ -186,12 +191,23 @@
     <button onclick="deleteFile()">Eliminar</button>
     <button id="previewButton">Vista Previa</button>
   </div>
+
+
   <script>
     
     function handleFileSelect(event) {
-        const form = document.getElementById('upload-form');
-        form.submit();
-    }
+    alert("¡El archivo se ha subido correctamente!");
+
+    const form = document.getElementById('upload-form');
+
+    form.submit();
+
+    // Esperar 1 segundo antes de recargar la página
+    setTimeout(() => {
+        window.location.reload();
+    }, 1000); // Tiempo en milisegundos (en este caso, 1 segundo)
+}
+
 
     //carga de documentos
     async function loadDocumentos() {
@@ -256,8 +272,10 @@
         documentCard.addEventListener('click', function(event) { //este es un evento de click, el menu que aparece al dar click a algo, que dice "Copiar URL, Descargar, Eliminar"
             const menuOptions = document.getElementById('menuOptions');
             menuOptions.style.display = 'block';
-            menuOptions.style.left = `${event.pageX}px`;
-            menuOptions.style.top = `${event.pageY}px`;
+            const xPosition = event.clientX;
+        const yPosition = event.clientY;
+        menuOptions.style.left = `${xPosition}px`;
+        menuOptions.style.top = `${yPosition}px`;
             menuOptions.dataset.documentId = documento._id;
             event.stopPropagation(); //pa que no se cicle
         });
