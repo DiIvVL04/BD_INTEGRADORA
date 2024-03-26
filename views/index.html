@@ -64,11 +64,14 @@
       border-radius: 5px;
       margin-bottom: 10px;
       padding: 10px;
+      font-size: 20px;
     }
     .document-image {
-      max-width: 100%;
+      width: 200px; /* Define el ancho deseado para las imágenes */
+      height: 200px; /* Permite que la altura se ajuste automáticamente para mantener la relación de aspecto */
       margin-top: 10px; /* Espacio arriba */
-    }
+}
+
     #documentos-container {
       display: flex;
       flex-wrap: wrap;
@@ -248,40 +251,63 @@
     }
 
     function crearCard(documento) {
-        const documentCard = document.createElement('div'); //crea un elemento div
-        documentCard.classList.add('document-card'); //le pone al div la clase document-card
+    const documentCard = document.createElement('div');
+    documentCard.classList.add('document-card');
 
-        if (documento.contentType.startsWith('image')) { //si el documento tiene imagen, la src de la imagen va a ser el resultado del /download/id 
+    let isImage = false;
+
+    if (documento.contentType.startsWith('image')) {
+        // Verificar si es jpg, jpeg o png
+        if (documento.contentType.includes('jpeg') || documento.contentType.includes('jpg') || documento.contentType.includes('png')) {
             const image = document.createElement('img');
             image.src = `/download/${documento._id}`;
             image.alt = documento.name;
             image.classList.add('document-image');
             documentCard.appendChild(image);
-        } else { //si no tiene imagen, la src de la imagen va a ser el generico.png de la carpeta assets
+            isImage = true;
+        } else {
+            // Si no es una imagen soportada, mostrar una imagen genérica
             const image = document.createElement('img');
             image.src = '../assets/generico.png';
             image.alt = documento.name;
             image.classList.add('document-image');
             documentCard.appendChild(image);
         }
+    } else {
+        // Si no es una imagen, mostrar una imagen genérica
+        const image = document.createElement('img');
+        image.src = '../assets/generico.png';
+        image.alt = documento.name;
+        image.classList.add('document-image');
+        documentCard.appendChild(image);
+    }
 
-        const documentName = document.createElement('div');
-        documentName.textContent = documento.name; //le pone el nombre del archivo
-        documentCard.appendChild(documentName); //al final ya crea el card
+    const documentName = document.createElement('div');
+    documentName.textContent = documento.name;
+    documentCard.appendChild(documentName);
 
-        documentCard.addEventListener('click', function(event) { //este es un evento de click, el menu que aparece al dar click a algo, que dice "Copiar URL, Descargar, Eliminar"
-            const menuOptions = document.getElementById('menuOptions');
-            menuOptions.style.display = 'block';
-            const xPosition = event.clientX;
+    documentCard.addEventListener('click', function(event) {
+        const menuOptions = document.getElementById('menuOptions');
+        menuOptions.style.display = 'block';
+        const xPosition = event.clientX;
         const yPosition = event.clientY;
         menuOptions.style.left = `${xPosition}px`;
         menuOptions.style.top = `${yPosition}px`;
-            menuOptions.dataset.documentId = documento._id;
-            event.stopPropagation(); //pa que no se cicle
-        });
+        menuOptions.dataset.documentId = documento._id;
+        event.stopPropagation();
+    });
 
-        return documentCard; //regresa la card creada con el nombre, la src de la imagen y el evento de click del menu
+    // Ocultar el botón de vista previa si el documento no es una imagen
+    if (!isImage) {
+        previewButton.style.display = 'none';
+    } else {
+        previewButton.style.display = 'block';
     }
+
+    return documentCard;
+}
+
+
 
     function openUrl() { 
       //funcion en stand by, copia la url y el id de la imagen y si pegas la URL te descarla la imagen
@@ -322,19 +348,19 @@
     //carga todo el dom y este se actualiza constantemente
     document.addEventListener('DOMContentLoaded', loadDocumentos);
 
-    document.addEventListener('click', function() {
-        const menuOptions = document.getElementById('menuOptions');
-        if (menuOptions) {
-            menuOptions.style.display = 'none';
-        }
-    });
-
-    function closeModal() {
-      const modal = document.getElementById('modal');
-      modal.style.display = 'none';
+document.addEventListener('click', function() {
+    const menuOptions = document.getElementById('menuOptions');
+    if (menuOptions) {
+        menuOptions.style.display = 'none';
     }
-    
-    function previewImage(src) {
+});
+
+function closeModal() {
+    const modal = document.getElementById('modal');
+    modal.style.display = 'none';
+}
+
+function previewImage(src) {
     const modal = document.getElementById('modal');
     const modalImage = document.getElementById('modal-image');
     modal.style.display = 'block';
@@ -342,13 +368,105 @@
     modalImage.classList.add('preview-image'); // Agregar clase para estilos
 }
 
-    const previewButton = document.getElementById('previewButton');
-    previewButton.addEventListener('click', function() {
-      const documentId = document.getElementById('menuOptions').dataset.documentId;
-      const imageUrl = `/download/${documentId}`;
-      previewImage(imageUrl);
+const previewButton = document.getElementById('previewButton');
+
+// Ocultar el botón de vista previa si el documento no es una imagen
+previewButton.style.display = 'none';
+
+async function loadDocumentos() {
+    try {
+        const response = await fetch('/documentos');
+        const data = await response.json();
+        const documentList = document.getElementById('document-list');
+        const buscadorInput = document.getElementById('search-input');
+
+        documentList.innerHTML = '';
+
+        const updateDocumentList = () => {
+            const buscador = buscadorInput.value.trim().toLowerCase();
+            if (!buscador) {
+                documentList.innerHTML = '';
+                data.documentos.forEach(documento => {
+                    const documentCard = crearCard(documento);
+                    documentList.appendChild(documentCard);
+                });
+            } else {
+                const filtradoDocs = data.documentos.filter(documento =>
+                    documento.name.toLowerCase().replace(/\.[^/.]+$/, '').includes(buscador)
+                );
+
+                documentList.innerHTML = '';
+
+                filtradoDocs.forEach(documento => {
+                    const documentCard = crearCard(documento);
+                    documentList.appendChild(documentCard);
+                });
+            }
+        };
+
+        buscadorInput.addEventListener('input', updateDocumentList);
+        updateDocumentList();
+    } catch (error) {
+        console.error('Error al cargar los documentos:', error);
+    }
+}
+
+function crearCard(documento) {
+    const documentCard = document.createElement('div');
+    documentCard.classList.add('document-card');
+
+    if (documento.contentType.startsWith('image')) {
+        // Verificar si es jpg, jpeg o png
+        if (documento.contentType.includes('jpeg') || documento.contentType.includes('jpg') || documento.contentType.includes('png')) {
+            const image = document.createElement('img');
+            image.src = `/download/${documento._id}`;
+            image.alt = documento.name;
+            image.classList.add('document-image');
+            documentCard.appendChild(image);
+            
+            // Mostrar el botón de vista previa solo si el documento es una imagen
+            previewButton.style.display = 'block';
+        } else {
+            // Si no es una imagen soportada, mostrar una imagen genérica
+            const image = document.createElement('img');
+            image.src = '../assets/generico.png';
+            image.alt = documento.name;
+            image.classList.add('document-image');
+            documentCard.appendChild(image);
+        }
+    } else {
+        // Si no es una imagen, mostrar una imagen genérica
+        const image = document.createElement('img');
+        image.src = '../assets/generico.png';
+        image.alt = documento.name;
+        image.classList.add('document-image');
+        documentCard.appendChild(image);
+    }
+
+    const documentName = document.createElement('div');
+    documentName.textContent = documento.name;
+    documentCard.appendChild(documentName);
+
+    documentCard.addEventListener('click', function(event) {
+        const menuOptions = document.getElementById('menuOptions');
+        menuOptions.style.display = 'block';
+        const xPosition = event.clientX;
+        const yPosition = event.clientY;
+        menuOptions.style.left = `${xPosition}px`;
+        menuOptions.style.top = `${yPosition}px`;
+        menuOptions.dataset.documentId = documento._id;
+        event.stopPropagation();
     });
+
+    return documentCard;
+}
+
+previewButton.addEventListener('click', function() {
+    const documentId = document.getElementById('menuOptions').dataset.documentId;
+    const imageUrl = `/download/${documentId}`;
+    previewImage(imageUrl);
+});
+
 </script>
 </body>
 </html>
-
